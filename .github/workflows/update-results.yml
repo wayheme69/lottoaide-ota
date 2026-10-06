@@ -3,6 +3,10 @@ name: Update Lotto 6aus49 + EuroJackpot results
 on:
   schedule:
     - cron: "37 */2 * * *"
+    # Soirs de tirage (mar, mer, ven, sam) : passages rapprochés après la ziehung
+    - cron: "7,37 17-22 * * 2,3,5,6"
+    # Quoten 6aus49 publiées jeudi et lundi matin
+    - cron: "23 6,7,8 * * 1,4"
   workflow_dispatch:
 
 permissions:
@@ -15,11 +19,13 @@ jobs:
       - uses: actions/checkout@v4
       - name: Fetch latest results
         run: python3 scripts/update_de.py
+      - name: Build de_results.json (numbers + official Quoten)
+        run: python3 scripts/quoten_de.py
       - name: Commit if changed
         run: |
           git config user.name "results-bot"
           git config user.email "actions@github.com"
-          git add eurojackpot.csv lotto6aus49.csv
+          git add eurojackpot.csv lotto6aus49.csv de_results.json
           if ! git diff --cached --quiet; then
             git commit -m "results: $(date -u +%Y-%m-%dT%H:%MZ)"
             git pull --rebase origin main
